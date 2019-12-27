@@ -14,8 +14,8 @@ import android.widget.TextView;
 
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
-import com.igor.my_scan.data.CodesContract;
-import com.igor.my_scan.data.CodesDbHelper;
+import com.igor.my_scan.data.ThermoContract;
+import com.igor.my_scan.data.ThermoDbHelper;
 
 
 public class myMainActivity extends Activity {
@@ -23,7 +23,7 @@ public class myMainActivity extends Activity {
     private Button buttonBarCodeScan;
     private TextView textMsgView;
     private TextView textCodeInfoView;
-    private CodesDbHelper mDbHelper;
+    private ThermoDbHelper mDbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +44,7 @@ public class myMainActivity extends Activity {
             }
         });
 
-        mDbHelper = new CodesDbHelper(this);
+        mDbHelper = new ThermoDbHelper(this);
     }
 
     public void displayMessage(final String msg) {
@@ -54,72 +54,30 @@ public class myMainActivity extends Activity {
 
     public void showCodeInfo(final String code) {
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
-        // Зададим условие для выборки - список столбцов
-        String[] projection = {
-                CodesContract.CodesEntry._ID,
-                CodesContract.CodesEntry.COLUMN_CODE,
-                CodesContract.CodesEntry.COLUMN_INFO
-        };
 
-        // Делаем запрос
-        /*
-        Cursor cursor = db.query(
-                CodesContract.CodesEntry.TABLE_NAME,   // таблица
-                projection,            // столбцы
-                null,                  // столбцы для условия WHERE
-                null,                  // значения для условия WHERE
-                null,                  // Don't group the rows
-                null,                  // Don't filter by row groups
-                null);                   // The sort order
-         */
-
-        String query_str = String.format("SELECT _id, code, info FROM %s WHERE %s = %s",
-                CodesContract.CodesEntry.TABLE_NAME,
-                CodesContract.CodesEntry.COLUMN_CODE,
+        String query_str = String.format(
+                "SELECT mark_id, code, equip_id, description FROM %s WHERE %s = \"%s\"",
+                ThermoContract.MarksEntry.TABLE_NAME,
+                ThermoContract.MarksEntry.COLUMN_CODE,
                 code);
-        Cursor cursor = db.rawQuery(query_str,null);
-        if (cursor.getCount() ==0) {
-            textCodeInfoView.setText(String.format("Code %s is unknown!!",code));
-        }
-        else  if(cursor.getCount() >1) {
-            textCodeInfoView.setText(String.format("Code %s is found more then once",code));
-        }
-        else { // 1 row
+        Cursor cursor = db.rawQuery(query_str, null);
+        if (cursor.getCount() == 0) {
+            textCodeInfoView.setText(String.format("Code %s is unknown!!", code));
+        } else if (cursor.getCount() > 1) {
+            textCodeInfoView.setText(String.format("Code %s is found more then once", code));
+        } else { // 1 row
 //            int id = cursor.getInt(cursor.getColumnIndex(CodesContract.CodesEntry._ID));
-            int infoIdx = cursor.getColumnIndex(CodesContract.CodesEntry.COLUMN_INFO);
+            int descriptionIdx = cursor.getColumnIndex(ThermoContract.MarksEntry.COLUMN_DESCRIPTION);
+            int equipIdIdx = cursor.getColumnIndex(ThermoContract.MarksEntry.COLUMN_EQUIP_ID);
+            int markIDIdx = cursor.getColumnIndex(ThermoContract.MarksEntry.COLUMN_MARK_ID);
             cursor.moveToFirst();
-            String info = cursor.getString(infoIdx);
-            textCodeInfoView.setText(String.format("%s:\n%s",code,info));
+            String description = cursor.getString(descriptionIdx);
+            String equipId = cursor.getString(equipIdIdx);
+            String markID = cursor.getString(markIDIdx);
+            textCodeInfoView.setText(String.format("%s:\n  equip_id=%s\n  description=%s\n mark_id=%s",
+                    code, equipId, description, markID));
         }
         cursor.close();
-        /*
-
-//        TextView displayTextView = (TextView) findViewById(R.id.text_view_info);
-
-        try {
-
-            // Узнаем индекс каждого столбца
-            int idColumnIndex = cursor.getColumnIndex(CodesContract.CodesEntry._ID);
-            int codeColumnIndex = cursor.getColumnIndex(CodesContract.CodesEntry.COLUMN_CODE);
-            int infoColumnIndex = cursor.getColumnIndex(CodesContract.CodesEntry.COLUMN_INFO);
-
-
-            // Проходим через все ряды
-            while (cursor.moveToNext()) {
-                // Используем индекс для получения строки или числа
-                int currentID = cursor.getInt(idColumnIndex);
-                String currentName = cursor.getString(codeColumnIndex);
-                String currentCity = cursor.getString(infoColumnIndex);
-                // Выводим значения каждого столбца
-                textCodeInfoView.append(("\n" + currentID + " - " +
-                        currentName + " - " +
-                        currentCity));
-            }
-        } finally {
-            // Всегда закрываем курсор после чтения
-            cursor.close();
-        }
-        */
     }
 
     @Override
