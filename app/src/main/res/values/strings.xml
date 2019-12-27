@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">my_constr</string>
+    <string name="scan">SCAN</string>
+    <string name="meter">Meter</string>
+    <string name="title_activity_main">myScan</string>
+    <string name="turn_off_flashlight">FlashLight on</string>
+    <string name="turn_on_flashlight">flashLight off</string>
+    <string name="message">Place a barcode inside the viewfinder rectangle to scan it.</string>
+</resources>
